@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Code Runner</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        textarea { width: 100%; height: 200px; }
+        select, input, button { margin-top: 10px; padding: 8px; font-size: 16px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 20px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h2>Welcome, {{ username }}</h2>
+    <a href="/logout">Logout</a>
+
+    <form method="POST">
+        <label><b>Code:</b></label><br>
+        <textarea name="code" placeholder="Write your code here...">{{ request.form.code if request.form.code else '' }}</textarea><br>
+
+        <label><b>Select Language:</b></label><br>
+        <select name="language">
+            <option value="python" {% if request.form.language == "python" %}selected{% endif %}>Python</option>
+            <option value="c" {% if request.form.language == "c" %}selected{% endif %}>C</option>
+            <option value="cpp" {% if request.form.language == "cpp" %}selected{% endif %}>C++</option>
+            <option value="java" {% if request.form.language == "java" %}selected{% endif %}>Java</option>
+        </select><br>
+
+        <label><b>Program Input:</b></label><br>
+        <textarea name="user_input" placeholder="{{ prompt if prompt else 'Enter input before running...' }}">{{ request.form.user_input if request.form.user_input else '' }}</textarea><br>
+
+        <button type="submit">Run</button>
+    </form>
+
+    {% if output %}
+        <h3>Output:</h3>
+        <div class="output">{{ output }}</div>
+    {% endif %}
+</body>
+</html>
