@@ -40,7 +40,7 @@ def editor():
             )
             output = result.stdout.strip() if result.returncode == 0 else result.stderr.strip()
         except subprocess.TimeoutExpired:
-            output = "Error: Code execution took too long."
+            output = "Error: Code execution took too long"
         except Exception as e:
             output = f"Error: {str(e)}"
         finally:
