@@ -16,7 +16,7 @@ def home():
 @editor_bp.route("/editor", methods=["GET", "POST"])
 def editor():
     if "user" not in session:
-        flash("Please log in first.", "error")
+        flash("Please log in first", "error")
         return redirect(url_for("auth.login"))
 
     html = load_html("editor.html")
