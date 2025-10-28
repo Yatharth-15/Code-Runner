@@ -63,7 +63,7 @@ def register():
             return redirect(url_for("auth.register"))
 
         if add_user(username, password):
-            flash("Registration successful! Please log in", "success")
+            flash("Registration successful! Please log in.", "success")
             return redirect(url_for("auth.login"))
         else:
             flash("Username already exists.", "error")

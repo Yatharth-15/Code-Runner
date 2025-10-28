@@ -16,7 +16,7 @@ def home():
 @editor_bp.route("/editor", methods=["GET", "POST"])
 def editor():
     if "user" not in session:
-        flash("Please log in first", "error")
+        flash("Please log in first.", "error")
         return redirect(url_for("auth.login"))
 
     html = load_html("editor.html")
@@ -40,7 +40,7 @@ def editor():
             )
             output = result.stdout.strip() if result.returncode == 0 else result.stderr.strip()
         except subprocess.TimeoutExpired:
-            output = "Error: Code execution took too long"
+            output = "Error: Code execution took too long."
         except Exception as e:
             output = f"Error: {str(e)}"
         finally:
