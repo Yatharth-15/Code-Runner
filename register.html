@@ -2,19 +2,23 @@
 <html>
 <head>
     <title>Register</title>
+    <style>
+        body { font-family: Arial; background: #f8f9fa; margin: 20px; }
+        form { max-width: 400px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        input, button { width: 100%; padding: 8px; margin-top: 10px; font-size: 15px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
 </head>
 <body>
-    <h2>Register Page</h2>
-    {% if message %}
-        <p style="color: red;">{{ message }}</p>
-    {% endif %}
+    <h2 style="text-align:center;">Register</h2>
     <form method="POST">
         <label>Username:</label>
-        <input type="text" name="username" required><br><br>
+        <input type="text" name="username" required>
         <label>Password:</label>
-        <input type="password" name="password" required><br><br>
-        <input type="submit" value="Register">
+        <input type="password" name="password" required>
+        <button type="submit">Register</button>
+        <p style="text-align:center;">Already registered? <a href="/login">Login here</a></p>
     </form>
-    <p>Already have an account? <a href="/login">Login here</a></p>
 </body>
 </html>

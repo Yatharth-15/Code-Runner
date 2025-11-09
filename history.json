@@ -1,0 +1,7 @@
+{
+    "asd": [
+        "# Program to add three numbers\r\na = int(input(\"Enter first number: \"))\r\nb = int(input(\"Enter second number: \"))\r\nc = int(input(\"Enter third number: \"))\r\nprint(\"Total =\", a + b + c)",
+        "# Program to add three numbers\r\na = int(input(\"Enter first number: \"))\r\nb = int(input(\"Enter second number: \"))\r\nprint(\"Total =\", a + b + c)",
+        "#include <stdio.h>\r\n\r\nint main() {\r\n    int a, b, c;\r\n    printf(\"Enter three numbers: \");\r\n    scanf(\"%d %d %d\", &a, &b, &c);\r\n    printf(\"Sum = %d\\n\", a + b + c);\r\n    return 0;\r\n}"
+    ]
+}
