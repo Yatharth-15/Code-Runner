@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+database.db
+temp_runs/
+venv/
+*.exe
+temp_*
+*.json.bak

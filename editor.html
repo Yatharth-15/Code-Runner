@@ -2,72 +2,701 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Code Runner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace - Code Runner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    
     <style>
-        body { font-family: Arial, sans-serif; background: #e3f2fd; margin: 0; }
-        header { background: #1565c0; color: #fff; text-align: center; padding: 12px; font-size: 22px; position: relative; }
-        .logout { color: #fff; position: absolute; right: 20px; top: 12px; text-decoration: none; }
-        .container { display: flex; justify-content: center; gap: 20px; margin: 30px; flex-wrap: wrap; }
-        .box { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
-        .editor { width: 65%; min-width: 300px; }
-        .history { width: 25%; min-width: 200px; max-height: 500px; overflow-y: auto; }
-        textarea, select, button { width: 100%; padding: 8px; margin: 8px 0; font-size: 14px; border-radius: 5px; }
-        textarea { font-family: Consolas, monospace; height: 120px; border: 1px solid #ccc; }
-        button { background: #1565c0; color: #fff; border: none; cursor: pointer; }
-        button:hover { background: #0d47a1; }
-        .output, .history-item { background: #f1f1f1; padding: 10px; border-radius: 5px; white-space: pre-wrap; }
-        .history-item { margin: 6px 0; cursor: pointer; font-size: 13px; font-family: Consolas; }
-        .history-item:hover { background: #bbdefb; }
-        small { color: #555; font-style: italic; }
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.45);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --terminal-bg: #030712;
+            --terminal-text: #f6f9f8;
+            --terminal-err: #f87171;
+            --editor-bg: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header Style */
+        header {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        header .username {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        header .logout-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        header .logout-btn:hover {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+
+        /* Container */
+        .workspace-container {
+            display: flex;
+            justify-content: center;
+            flex: 1;
+            padding: 30px;
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Card panels */
+        .panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Left Side: Editor Area */
+        .main-editor-panel {
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* Editor controls */
+        .editor-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .language-select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 10px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 140px;
+        }
+
+        .language-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .split-view {
+            display: flex;
+            gap: 24px;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .split-pane {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-pane {
+            flex: 6;
+            min-width: 0;
+        }
+
+        .terminal-pane {
+            flex: 4;
+            min-width: 0;
+        }
+
+        .save-btn {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .save-btn:hover {
+            background: var(--accent);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .run-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .run-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Code input container (Simulating editor frame) */
+        .editor-frame {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--editor-bg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .editor-header {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .window-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .dot.red { background: #ef4444; }
+        .dot.yellow { background: #f59e0b; }
+        .dot.green { background: #10b981; }
+
+        .editor-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: transparent;
+            border: 1px solid transparent;
+            text-align: right;
+            outline: none;
+            width: 150px;
+            transition: all 0.3s;
+            cursor: text;
+        }
+        .editor-title:hover {
+            color: var(--text-primary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .editor-title:focus {
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--accent);
+        }
+
+        /* CodeMirror custom overrides */
+        .CodeMirror {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            height: 340px;
+            background: transparent !important;
+            color: #f8fafc !important;
+        }
+
+        .CodeMirror-gutters {
+            background: rgba(15, 23, 42, 0.5) !important;
+            border-right: 1px solid var(--border-color) !important;
+        }
+
+        .CodeMirror-linenumber {
+            color: #475569 !important;
+        }
+
+        .CodeMirror-cursor {
+            border-left: 2px solid var(--accent) !important;
+        }
+
+        /* Console/Output Box */
+        .console-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .console-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .console-box h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .console-hint {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* Output terminal */
+        .terminal-panel {
+            background: var(--terminal-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--terminal-text);
+            height: 340px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+            outline: none;
+            cursor: text;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        .terminal-panel:focus {
+            border-color: var(--accent);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 0 3px rgba(99, 102, 241, 0.25);
+        }
+
+        .terminal-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: var(--terminal-text);
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .workspace-container {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
-    <header>Code Runner <a href="/logout" class="logout">Logout</a></header>
-
-    <div class="container">
-        <div class="box editor">
-            <h3>Welcome, {{ username }}</h3>
-            <form method="POST">
-                <textarea id="code" name="code" placeholder="Write code...">{{ request.form.code or '' }}</textarea>
-                <select name="language">
-                    <option value="python">Python</option>
-                    <option value="c">C</option>
-                    <option value="cpp">C++</option>
-                    <option value="java">Java</option>
-                </select>
-                <textarea name="user_input" placeholder="Inputs (comma separated)">{{ request.form.user_input or '' }}</textarea>
-                <small>Use commas for multiple inputs.</small>
-                <button type="submit">▶ Run</button>
-            </form>
-
-            {% if output %}
-                <h4>Output:</h4>
-                <div class="output">{{ output }}</div>
-            {% endif %}
+    <header>
+        <h1>Code Runner</h1>
+        <div class="user-badge">
+            <span class="username">Active User: <strong>{{ username }}</strong></span>
+            <a href="/logout" class="logout-btn">Log Out</a>
         </div>
+    </header>
 
-        <div class="box history">
-            <h4>History</h4>
-            {% if user_history %}
-                {% for item in user_history %}
-                    <div class="history-item"
-                         data-code="{{ item | replace('\'', '&#39;') | replace('\n', ' ') | replace('\r', '') }}">
-                         {{ item[:50] }}{% if item|length > 50 %}...{% endif %}
+    <div class="workspace-container">
+        <!-- Main Code Editor Block -->
+        <div class="panel main-editor-panel">
+            <form id="runner-form">
+                <div class="editor-controls">
+                    <select name="language" class="language-select" id="language-select">
+                        <option value="python">Python</option>
+                        <option value="c">C</option>
+                        <option value="cpp">C++</option>
+                        <option value="java">Java</option>
+                    </select>
+                    
+                    <div class="button-group">
+                        <button type="button" class="save-btn" id="save-btn" title="Download current source code file">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            Save File
+                        </button>
+
+                        <button type="button" class="run-btn" id="main-run-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            Run Code
+                        </button>
                     </div>
-                {% endfor %}
-            {% else %}
-                <p style="color:#777;">No history yet.</p>
-            {% endif %}
+                </div>
+
+                <div class="split-view">
+                    <div class="split-pane editor-pane">
+                        <div class="editor-frame">
+                            <div class="editor-header">
+                                <div class="window-dots">
+                                    <div class="dot red"></div>
+                                    <div class="dot yellow"></div>
+                                    <div class="dot green"></div>
+                                </div>
+                                <input type="text" class="editor-title" id="editor-filename" value="program.py" title="Edit filename here">
+                            </div>
+                            <textarea id="code" name="code" style="display: none;" placeholder="Write your code here..." required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="split-pane terminal-pane">
+                        <div class="console-box">
+                            <div class="console-header-row">
+                                <h4>Interactive Terminal</h4>
+                                <span class="console-hint" id="console-status-hint">Click terminal to focus & type live inputs</span>
+                            </div>
+                            <div class="terminal-panel" id="terminal-screen" tabindex="0" title="Click to focus and type inputs"><span id="terminal-content">Console ready... Press Run Code to execute.</span><span class="terminal-cursor" id="cursor"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
+    <!-- CodeMirror Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+
     <script>
-        document.querySelectorAll('.history-item').forEach(el => {
-            el.addEventListener('click', () => {
-                document.getElementById('code').value = el.dataset.code;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+        const langSelect = document.getElementById('language-select');
+        const filenameHeader = document.getElementById('editor-filename');
+        const mainRunBtn = document.getElementById('main-run-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const terminal = document.getElementById('terminal-screen');
+        const terminalContent = document.getElementById('terminal-content');
+        const consoleStatusHint = document.getElementById('console-status-hint');
+
+        const extMap = {
+            python: 'program.py',
+            c: 'program.c',
+            cpp: 'program.cpp',
+            java: 'Main.java'
+        };
+
+        const modeMap = {
+            python: 'python',
+            c: 'text/x-csrc',
+            cpp: 'text/x-c++src',
+            java: 'text/x-java'
+        };
+
+        // Initialize CodeMirror editor
+        const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+            lineNumbers: true,
+            theme: "dracula",
+            mode: "python",
+            indentUnit: 4,
+            tabSize: 4,
+            lineWrapping: true,
+            viewportMargin: Infinity
+        });
+
+        function updateFilenameAndMode() {
+            const lang = langSelect.value;
+            filenameHeader.value = extMap[lang] || 'program.txt';
+            editor.setOption("mode", modeMap[lang] || "python");
+        }
+
+        langSelect.addEventListener('change', updateFilenameAndMode);
+        
+        updateFilenameAndMode();
+
+        // Save (Download) current file logic
+        saveBtn.addEventListener('click', () => {
+            editor.save();
+            const codeContent = document.getElementById('code').value;
+            let filename = filenameHeader.value.trim() || 'program.txt';
+            
+            // Auto-append default extension if user didn't provide one
+            const lang = langSelect.value;
+            const defaultFilename = extMap[lang] || 'program.txt';
+            const lastDot = defaultFilename.lastIndexOf('.');
+            const defaultExt = lastDot !== -1 ? defaultFilename.substring(lastDot) : '';
+            if (defaultExt && !filename.includes('.')) {
+                filename += defaultExt;
+            }
+
+            const blob = new Blob([codeContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+
+
+
+        // Initialize state variables for interactive execution
+        let staticTerminalOutput = "Console ready... Press Run Code to execute.\n";
+        let currentInputBuffer = "";
+        let activeRunId = null;
+        let eventSource = null;
+
+        function updateTerminalDisplay() {
+            const safeOutput = escapeHtml(staticTerminalOutput);
+            const safeBuffer = escapeHtml(currentInputBuffer);
+            // Highlight current user input buffer in white/bold
+            terminalContent.innerHTML = safeOutput + `<span style="color: #f8fafc; font-weight: bold; text-decoration: underline;">${safeBuffer}</span>`;
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Terminal focus hints
+        terminal.addEventListener('focus', () => {
+            if (activeRunId) {
+                consoleStatusHint.textContent = "Terminal focused. Type input and press Enter.";
+                consoleStatusHint.style.color = "var(--terminal-text)";
+            }
+        });
+
+        terminal.addEventListener('blur', () => {
+            consoleStatusHint.textContent = "Click terminal to focus & type live inputs";
+            consoleStatusHint.style.color = "var(--text-secondary)";
+        });
+
+        // Keydown listener for capture inputs
+        terminal.addEventListener('keydown', (e) => {
+            if (!activeRunId) return;
+
+            // Handle special keys
+            if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Tab") {
+                e.preventDefault();
+                return;
+            }
+
+            if (e.key === "Enter") {
+                e.preventDefault();
+                const submittedInput = currentInputBuffer + "\n";
+                
+                // Append immediately to static terminal stream so the user sees their entry
+                staticTerminalOutput += submittedInput;
+                currentInputBuffer = "";
+                updateTerminalDisplay();
+                
+                // Send standard input to process
+                sendTerminalInput(submittedInput);
+            } else if (e.key === "Backspace") {
+                e.preventDefault();
+                if (currentInputBuffer.length > 0) {
+                    currentInputBuffer = currentInputBuffer.slice(0, -1);
+                    updateTerminalDisplay();
+                }
+            } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                e.preventDefault();
+                currentInputBuffer += e.key;
+                updateTerminalDisplay();
+            }
+        });
+
+        // Paste support
+        terminal.addEventListener('paste', (e) => {
+            if (!activeRunId) return;
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            currentInputBuffer += text;
+            updateTerminalDisplay();
+        });
+
+        // AJAX Run Trigger
+        mainRunBtn.addEventListener('click', () => {
+            // Synchronize CodeMirror to original textarea
+            editor.save();
+
+            // Close any existing event source
+            if (eventSource) {
+                eventSource.close();
+            }
+            activeRunId = null;
+            currentInputBuffer = "";
+            staticTerminalOutput = "⌛ Compiling / Starting Execution...\n";
+            updateTerminalDisplay();
+
+            const formData = new FormData();
+            formData.append('code', document.getElementById('code').value);
+            formData.append('language', langSelect.value);
+
+            fetch('/editor/run', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    staticTerminalOutput = `⚠️ Error: ${data.error}\n`;
+                    updateTerminalDisplay();
+                    return;
+                }
+                if (data.compiled === false) {
+                    staticTerminalOutput = `❌ Compilation Error:\n${data.error}\n`;
+                    updateTerminalDisplay();
+                    return;
+                }
+
+                // Process started successfully, stream output
+                activeRunId = data.run_id;
+                staticTerminalOutput = ""; // Clear start buffer
+                updateTerminalDisplay();
+                
+                // Automatically focus the terminal for inputs
+                terminal.focus();
+
+                startOutputStreaming(data.run_id);
+            })
+            .catch(err => {
+                staticTerminalOutput = `⚠️ Connection Error: ${err.message}\n`;
+                updateTerminalDisplay();
             });
         });
+
+        // SSE Listener
+        function startOutputStreaming(runId) {
+            eventSource = new EventSource(`/editor/stream/${runId}`);
+
+            eventSource.onmessage = function(event) {
+                const payload = JSON.parse(event.data);
+                
+                if (payload.stream === 'stdout' || payload.stream === 'stderr') {
+                    staticTerminalOutput += payload.data;
+                    updateTerminalDisplay();
+                } else if (payload.stream === 'status' && payload.data === 'finished') {
+                    staticTerminalOutput += `\n\n[Process completed with exit code ${payload.exit_code}]`;
+                    activeRunId = null;
+                    eventSource.close();
+                    updateTerminalDisplay();
+                }
+            };
+
+            eventSource.onerror = function() {
+                staticTerminalOutput += "\n[Stream closed]\n";
+                activeRunId = null;
+                eventSource.close();
+                updateTerminalDisplay();
+            };
+        }
+
+        // Post Input values
+        function sendTerminalInput(text) {
+            if (!activeRunId) return;
+
+            fetch(`/editor/input/${activeRunId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    staticTerminalOutput += `\n[System Error sending input: ${data.error}]\n`;
+                    updateTerminalDisplay();
+                }
+            })
+            .catch(err => {
+                staticTerminalOutput += `\n[System Connection Error: ${err.message}]\n`;
+                updateTerminalDisplay();
+            });
+        }
     </script>
 </body>
 </html>

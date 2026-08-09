@@ -1,62 +1,81 @@
-from flask import Blueprint, render_template_string, request, redirect, session, flash
-import json, os
+import sqlite3
+from flask import Blueprint, flash, redirect, render_template_string, request, session
+from werkzeug.security import check_password_hash, generate_password_hash
 
 auth_bp = Blueprint("auth", __name__)
+DB_FILE = "database.db"
+
 
 def load_html(file_name):
     with open(file_name, "r", encoding="utf-8") as f:
         return f.read()
 
-USERS_FILE = "users.json"
 
-def load_users():
-    try:
-        if os.path.exists(USERS_FILE) and os.path.getsize(USERS_FILE) > 0:
-            with open(USERS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-    except json.JSONDecodeError:
-        pass
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        f.write("{}")
-    return {}
+def init_db():
+    with sqlite3.connect(DB_FILE) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL
+            );
+        """)
+        conn.commit()
 
-def save_users(data):
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
 
-# --- Routes ---
+init_db()
+
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     html = load_html("login.html")
-    users = load_users()
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        if username in users and users[username] == password:
-            session["user"] = username
-            flash(f"Welcome, {username}!", "success")
-            return redirect("/editor")
+
+        with sqlite3.connect(DB_FILE) as conn:
+            conn.row_factory = sqlite3.Row
+            user = conn.execute(
+                "SELECT password FROM users WHERE username = ?", (username,)
+            ).fetchone()
+
+        if user:
+            stored_password = user["password"]
+            if check_password_hash(stored_password, password):
+                session["user"] = username
+                flash(f"Welcome, {username}!", "success")
+                return redirect("/editor")
+
         flash("Invalid username or password.", "error")
     return render_template_string(html)
+
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     html = load_html("register.html")
-    users = load_users()
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
         if not username or not password:
             flash("Please fill all fields.", "error")
             return redirect("/register")
-        if username in users:
+
+        hashed_password = generate_password_hash(password)
+        try:
+            with sqlite3.connect(DB_FILE) as conn:
+                conn.execute(
+                    "INSERT INTO users (username, password) VALUES (?, ?)",
+                    (username, hashed_password)
+                )
+                conn.commit()
+            flash("Registration successful!", "success")
+            return redirect("/login")
+        except sqlite3.IntegrityError:
             flash("Username already exists!", "error")
             return redirect("/register")
-        users[username] = password
-        save_users(users)
-        flash("Registration successful!", "success")
-        return redirect("/login")
+            
     return render_template_string(html)
+
 
 @auth_bp.route("/logout")
 def logout():

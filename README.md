@@ -1,72 +1,77 @@
-Code Runner -
-        Multi-Language Web Compiler
+# Code Runner - Multi-Language Web IDE
 
-A lightweight, web-based code execution engine built with Python (Flask). This application allows users to write, compile, and run code in multiple programming languages (Python, C, C++, and Java) directly from their browser.
-Features
-Multi-Language Support: Run Python, C, C++, and Java code.
+Code Runner is a simple yet powerful Web IDE built with **Python (Flask)**. It allows you to write, compile, and run code in **Python, C, C++, and Java** directly in your browser.
 
-User Authentication: Secure Login/ Logout system to manage user sessions.
+---
 
-Dynamic Input: Support for program inputs (stdin) via comma-separated values.
+## Features
 
-Clean UI: Minimalist, responsive design with a dedicated output console.
+*   **Interactive Terminal:** Stream compilation and program outputs in real-time, with full standard input (stdin) support.
+*   **Dracula Syntax Highlighter:** Beautiful syntax coloring for code editing powered by CodeMirror.
+*   **Split Layout:** Clean side-by-side split layout (Code Editor on the left, Terminal on the right).
+*   **Save File:** Download code files locally with custom filenames and automatic extensions.
+*   **SQLite Auth:** Safe user authentication using SQLite database and secure password hashing. Bypasses to a guest account for direct links.
 
-Sticky Forms: Retains your code and language selection after execution for a better workflow.
+---
 
-Technologies Used
+## Project Structure
 
-Frontend: HTML5, CSS3, Jinja2 Templates.
+*   `app.py` - Flask server launcher.
+*   `auth_module.py` - Authentication logic and database tables.
+*   `editor_module.py` - Non-blocking process execution engine and SSE outputs.
+*   `editor.html` - The frontend workspace template.
+*   `database.db` - SQLite database storing user hashes.
 
-Backend: Python, Flask Framework.
+---
 
-Execution: Subprocess module (for running system compilers like gcc, g++, and javac
+## 🚀 Setup & Execution
 
-Getting Started
+### 1. Prerequisites (Compiler Command Setup)
 
-Prerequisites
+Open your terminal or command prompt and run the commands for your operating system:
 
-Ensure you have the following installed on your system:
+#### **Windows (CMD/PowerShell):**
+```powershell
+# Install Python & Java JDK
+winget install Python.Python.3
+winget install Eclipse.Temurin.17.JDK
 
-1. Python 3.x
+# Install C/C++ compiler (Install MSYS2 and run this inside MSYS2 terminal)
+winget install MSYS2.MSYS2
+pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-g++
+```
+*(Make sure to add Python, Java, and MinGW `bin` directories to your System Environment variables PATH).*
 
-2. Flask: pip install flask
+#### **macOS:**
+```bash
+# Install Python & Java JDK
+brew install python
+brew install openjdk
 
-3. Compilers: * gcc (for C)
+# Install C/C++ compiler tools
+xcode-select --install
+```
 
-g++ (for C++)
+#### **Linux (Ubuntu/Debian):**
+```bash
+# Install Python, C/C++, and Java JDK
+sudo apt update
+sudo apt install python3 python3-pip build-essential default-jdk -y
+```
 
-jdk (for Java)
+---
 
-Installation & Setup
+### 2. Run the Application
 
-1. Clone the repository:
+Navigate to the project folder and execute:
 
-bash
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
 
-git clone https://github.com /Yatharth-15/Code-Runner.git cd Code-Runner
-
-2. Run the application:
-
-   bash
-
+# Start the server
 python app.py
+```
 
-3.
-
-Access the web app: Open your browser and go to http://127.0.0.1:5000
-
-How It Works
-
-1. Input: The user writes code in the textarea and selects a language.
-
-2. Processing: The Flask backend receives the code via a POST request.
-
-3. Execution:
-
-The code is saved to a temporary file.
-
-The server uses the subprocess module to call the respective compiler/interpreter.
-
-User inputs are passed into the standard input (stdin) of the running process.
-
-4. Output: The result (or error message) is captured and displayed back on the webpage.
+Now, open your browser and navigate to:
+**`http://localhost:5000`**
